@@ -1,0 +1,13 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml
+
+authors = ["brie.bennett@fastly.com"]
+cloned_from = "https://github.com/fastly/compute-starter-kit-rust-default"
+description = "Brie's Hello World Project"
+language = "rust"
+manifest_version = 3
+name = "fastly-brie-hello"
+service_id = "lUtF4YPq2pep7qsjGvkRA6"
+
+[scripts]
+  build = "cargo build --profile release"
