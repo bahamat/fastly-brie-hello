@@ -11,3 +11,18 @@ service_id = "lUtF4YPq2pep7qsjGvkRA6"
 
 [scripts]
   build = "cargo build --profile release"
+
+[local_server]
+  [local_server.backends]
+    [local_server.backends.ip6_me]
+      url = "https://ip6.me"
+      override_host = "ip6.me"
+      cert_host = "ip6.me"
+    [local_server.backends.ip6only_me]
+      url = "https://ip6only.me"
+      override_host = "ip6only.me"
+      cert_host = "ip6only.me"
+    [local_server.backends.ip4_me]
+      url = "https://ip4.me"
+      override_host = "ip4.me"
+      cert_host = "ip4.me"

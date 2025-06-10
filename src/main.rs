@@ -5,20 +5,18 @@ use fastly::http::{header, Method, StatusCode};
 use fastly::{mime, Error, Request, Response};
 
 use schemars::JsonSchema;
-use serde::Serialize;
 use serde::Deserialize;
-
+use serde::Serialize;
 
 #[derive(Serialize, JsonSchema)]
 struct Pong {
-    ping: String
+    ping: String,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
 struct HelloWorld {
-    world: String
+    world: String,
 }
-
 
 /// The entry point for your application.
 ///
@@ -28,10 +26,10 @@ struct HelloWorld {
 ///
 /// If `main` returns an error, a 500 error response will be delivered to the client.
 #[fastly::main]
-fn main(req: Request) -> Result<Response, Error> {
+fn main(mut req: Request) -> Result<Response, Error> {
     let build_stamp = option_env!("TIMESTAMP").unwrap_or("00000000T000000Z");
-    let fastly_service_version = std::env::var("FASTLY_SERVICE_VERSION")
-        .unwrap_or_else(|_| String::new());
+    let fastly_service_version =
+        std::env::var("FASTLY_SERVICE_VERSION").unwrap_or_else(|_| String::new());
 
     // Log service version
     println!(
@@ -42,18 +40,22 @@ fn main(req: Request) -> Result<Response, Error> {
     println!("Build time: {}", build_stamp);
 
     let pooled_backend = BackendBuilder::new("pooled", "zonena.me")
-    // pooled_backend
+        // pooled_backend
         // .enable_ssl()
         // .check_certificate("zonena.me")
         .enable_pooling(true)
         .finish()?;
 
     let div_backend = BackendBuilder::new("divided", "zonename.org")
-    // div_backend
+        // div_backend
         // .enable_ssl()
         // .check_certificate("zonena.me")
         .enable_pooling(false)
         .finish()?;
+
+    const FOUR_ONLY: &str = "ip4_me";
+    const SIX_ONLY: &str = "ip6only_me";
+    const SIX_FOUR: &str = "ip6_me";
 
     // Filter request methods...
     match req.get_method() {
@@ -99,7 +101,7 @@ fn main(req: Request) -> Result<Response, Error> {
 
             // Send a default synthetic response.
             Ok(Response::from_status(StatusCode::OK)
-                .with_header("X-Fastly-Service_version", fastly_service_version)
+                .with_header("X-Fastly-Service-Version", fastly_service_version)
                 .with_header("X-Build-Stamp", build_stamp)
                 .with_content_type(mime::TEXT_HTML_UTF_8)
                 .with_body(include_str!("welcome-to-compute.html")))
@@ -110,29 +112,56 @@ fn main(req: Request) -> Result<Response, Error> {
                 ping: String::from("pong"),
             };
             Ok(Response::from_status(StatusCode::OK)
-                .with_header("X-Fastly-Service_version", fastly_service_version)
+                .with_header("X-Fastly-Service-Version", fastly_service_version)
                 .with_header("X-Build-Stamp", build_stamp)
                 .with_body_json(&pong)?)
         }
 
         "/pooled" => {
-            let mut pooled_resp = req.send(pooled_backend)
-                .expect("request succeeds");
-            pooled_resp
-                .set_header("X-Fastly-Service_version", fastly_service_version);
-            pooled_resp
-                .set_header("X-Build-Stamp", build_stamp);
+            let mut pooled_resp = req.send(pooled_backend).expect("request succeeds");
+            pooled_resp.set_header("X-Fastly-Service-Version", fastly_service_version);
+            pooled_resp.set_header("X-Build-Stamp", build_stamp);
             Ok(pooled_resp)
         }
 
         "/div" => {
-            let mut div_resp = req.send(div_backend)
-                .expect("request succeeds");
-            div_resp
-                .set_header("X-Fastly-Service_version", fastly_service_version);
-            div_resp
-                .set_header("X-Build-Stamp", build_stamp);
+            let mut div_resp = req.send(div_backend).expect("request succeeds");
+            div_resp.set_header("X-Fastly-Service-Version", fastly_service_version);
+            div_resp.set_header("X-Build-Stamp", build_stamp);
             Ok(div_resp)
+        }
+
+        "/4only" => {
+            let mut url = req.get_url_mut();
+            url.set_path("/api/");
+            drop(url);
+
+            let mut four_me = req.send(FOUR_ONLY).expect("request succeeds");
+            four_me.set_header("X-Fastly-Service-Version", fastly_service_version);
+            four_me.set_header("X-BUild-Stamp", build_stamp);
+            Ok(four_me)
+        }
+
+        "/6only" => {
+            let mut url = req.get_url_mut();
+            url.set_path("/api/");
+            drop(url);
+
+            let mut six_only = req.send(SIX_ONLY).expect("request succeeds");
+            six_only.set_header("X-Fastly-Service-Version", fastly_service_version);
+            six_only.set_header("X-BUild-Stamp", build_stamp);
+            Ok(six_only)
+        }
+
+        "/6or4" => {
+            let mut url = req.get_url_mut();
+            url.set_path("/api/");
+            drop(url);
+
+            let mut six_me = req.send(SIX_FOUR).expect("request succeeds");
+            six_me.set_header("X-Fastly-Service-Version", fastly_service_version);
+            six_me.set_header("X-BUild-Stamp", build_stamp);
+            Ok(six_me)
         }
 
         // Catch all other requests and return a 404.
