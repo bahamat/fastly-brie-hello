@@ -136,7 +136,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             url.set_path("/api/");
             drop(url);
 
-            let mut four_me = req.send(FOUR_ONLY).expect("request succeeds");
+            let mut four_me = req.with_pass(true).send(FOUR_ONLY).expect("request succeeds");
             four_me.set_header("X-Fastly-Service-Version", fastly_service_version);
             four_me.set_header("X-BUild-Stamp", build_stamp);
             Ok(four_me)
@@ -147,7 +147,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             url.set_path("/api/");
             drop(url);
 
-            let mut six_only = req.send(SIX_ONLY).expect("request succeeds");
+            let mut six_only = req.with_pass(true).send(SIX_ONLY).expect("request succeeds");
             six_only.set_header("X-Fastly-Service-Version", fastly_service_version);
             six_only.set_header("X-BUild-Stamp", build_stamp);
             Ok(six_only)
@@ -158,7 +158,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
             url.set_path("/api/");
             drop(url);
 
-            let mut six_me = req.send(SIX_FOUR).expect("request succeeds");
+            let mut six_me = req.with_pass(true).send(SIX_FOUR).expect("request succeeds");
             six_me.set_header("X-Fastly-Service-Version", fastly_service_version);
             six_me.set_header("X-BUild-Stamp", build_stamp);
             Ok(six_me)
